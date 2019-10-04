@@ -34,7 +34,7 @@ else
 	C_ARCH = -mips32r2 -DSHMEM_MIRRORING
 endif
 
-CFLAGS = $(C_ARCH) -mplt -mno-shared -ggdb3 -O2 -DGCW_ZERO \
+CFLAGS = $(C_ARCH) -std=c99 -mplt -mno-shared -ggdb3 -O2 -DGCW_ZERO \
 	-Wall -Wunused -Wpointer-arith \
 	-Wno-sign-compare -Wno-cast-align \
 	-Isrc -Isrc/spu/$(SPU) -D$(SPU) -Isrc/gpu/$(GPU) \
@@ -98,6 +98,7 @@ endif
 OBJS += obj/gte.o
 OBJS += obj/spu/$(SPU)/spu.o
 
+OBJS += obj/port/$(PORT)/cdrom_hacks.o
 OBJS += obj/port/$(PORT)/port.o
 OBJS += obj/port/$(PORT)/frontend.o
 
