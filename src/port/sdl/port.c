@@ -583,6 +583,7 @@ void joy_init(void)
 
 void pad_update(void)
 {
+    int axisval;
 	SDL_Event event;
 	Uint8 *keys = SDL_GetKeyState(NULL);
 
@@ -598,23 +599,54 @@ void pad_update(void)
 			{
 #ifndef GCW_ZERO
 				case SDLK_ESCAPE:
-				event.type = SDL_QUIT;
-				SDL_PushEvent(&event);
-				break;
+                event.type = SDL_QUIT;
+                SDL_PushEvent(&event);
+                break;
 #endif
-				case SDLK_v:
-				{
-					Config.ShowFps=!Config.ShowFps;
-				}
-			break;
-			default:
-				break;
-			}
-			break;
-			default:
-			break;
-		}
-	}
+                case SDLK_v:
+                {
+                Config.ShowFps=!Config.ShowFps;
+                }
+                break;
+                default:
+                break;
+            }
+            break;
+            case SDL_JOYAXISMOTION:
+            switch (event.jaxis.axis)
+            {
+                case 0: /* X axis */
+                axisval = event.jaxis.value;
+                analog1 &= ~(ANALOG_LEFT | ANALOG_RIGHT);
+                if (axisval > joy_commit_range)
+                {
+                analog1 |= ANALOG_RIGHT;
+                }
+                else if (axisval < -joy_commit_range)
+                {
+                analog1 |= ANALOG_LEFT;
+                }
+                break;
+                case 1: /* Y axis*/
+                axisval = event.jaxis.value;
+                analog1 &= ~(ANALOG_UP | ANALOG_DOWN);
+                if (axisval > joy_commit_range)
+                {
+                analog1 |= ANALOG_DOWN;
+                }
+                else if (axisval < -joy_commit_range)
+                {
+                analog1 |= ANALOG_UP;
+                }
+                break;
+            }
+            break;
+            case SDL_JOYBUTTONDOWN:
+            break;
+            default:
+            break;
+        }
+    }
 
 	int k = 0;
 	while (keymap[k].key)
