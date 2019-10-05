@@ -44,13 +44,19 @@ unsigned char PAD1_poll(void) {
 	static uint8_t		buf[8] = {0xFF, 0x5A, 0xFF, 0xFF, 0x80, 0x80, 0x80, 0x80};
 
 	if (g.CurByte1 == 0) {
-		uint16_t			n;
+		uint64_t			n;
 		g.CurByte1++;
 
 		n = pad_read(0);
-
-		buf[2] = n & 0xFF;
-		buf[3] = n >> 8;
+		
+		buf[0] = n;
+		buf[1] = n >> 8;
+		buf[2] = n >> 16;
+		buf[3] = n >> 24;
+		buf[4] = n >> 32;
+		buf[5] = n >> 40;
+		buf[6] = n >> 48;
+		buf[7] = n >> 52 ;
 
 		g.CmdLen1 = 4;
 
@@ -65,13 +71,19 @@ unsigned char PAD2_poll(void) {
 	static uint8_t		buf[8] = {0xFF, 0x5A, 0xFF, 0xFF, 0x80, 0x80, 0x80, 0x80};
 
 	if (g.CurByte2 == 0) {
-		uint16_t			n;
+		uint64_t			n;
 		g.CurByte2++;
 
 		n = pad_read(1);
 
-		buf[2] = n & 0xFF;
-		buf[3] = n >> 8;
+		buf[0] = n & 0xFFFFFFFFFFFFFF;
+		buf[1] = n >> 8 & 0xFFFFFFFFFFFF;
+		buf[2] = n >> 16 & 0xFFFFFFFFFF;
+		buf[3] = n >> 24 & 0xFFFFFFFF;
+		buf[4] = n >> 32 & 0xFFFFFF;
+		buf[5] = n >> 40 & 0xFFFF;
+		buf[6] = n >> 48 & 0xFF;
+		buf[7] = n >> 52 ;
 
 		g.CmdLen2 = 4;
 

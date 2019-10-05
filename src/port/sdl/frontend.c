@@ -1986,7 +1986,7 @@ static int gui_LoadIso()
     //If a multi-CD Eboot .pbp is detected, cdriso.cpp's handlepbp() will
     // call this function later to allow choosing which CD to boot
     cdrIsoMultidiskCallback = gui_select_multicd_to_boot_from;
-    CheckforCDROMid_applyhacks();
+    //CheckforCDROMid_applyhacks();
 
     return 1;
   }

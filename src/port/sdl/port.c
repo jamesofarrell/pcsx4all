@@ -534,13 +534,15 @@ static struct
   { 0, 0 }
 };
 
-static unsigned short pad1 = 0xffff, _pad1 = 0xffff;
-static unsigned short pad2 = 0xffff;
-static unsigned short analog1 = 0;
+static uint64_t pad1 = 0x5a73ffffffffffff;
+static uint64_t pad2 = 0xFF5AFFFF80808080;
+static unsigned short buttons = 0xffff, _pad1 = 0xffff;
+static unsigned short analog1 = 0,tmp_axis=0;
 static int menu_check = 0;
 static int select_count = 0;
 uint8_t use_speedup = 0;
-SDL_Joystick * sdl_joy;
+SDL_Joystick * sdl_joy1;
+SDL_Joystick * sdl_joy2;
 #define joy_commit_range    3276
 enum
 {
@@ -552,8 +554,10 @@ enum
 
 void joy_init(void)
 {
-  sdl_joy = SDL_JoystickOpen(0);
+  sdl_joy1 = SDL_JoystickOpen(0);
+  sdl_joy2 = SDL_JoystickOpen(1);
   SDL_JoystickEventState(SDL_ENABLE);
+
   /*
   	int i;
   	int joy_count;
@@ -598,56 +602,78 @@ void pad_update(void)
 			switch (event.key.keysym.sym)
 			{
 #ifndef GCW_ZERO
-				case SDLK_ESCAPE:
-                event.type = SDL_QUIT;
-                SDL_PushEvent(&event);
-                break;
+        case SDLK_ESCAPE:
+          event.type = SDL_QUIT;
+          SDL_PushEvent(&event);
+          break;
 #endif
-                case SDLK_v:
-                {
-                Config.ShowFps=!Config.ShowFps;
-                }
-                break;
-                default:
-                break;
-            }
-            break;
-            case SDL_JOYAXISMOTION:
-            switch (event.jaxis.axis)
-            {
-                case 0: /* X axis */
-                axisval = event.jaxis.value;
-                analog1 &= ~(ANALOG_LEFT | ANALOG_RIGHT);
-                if (axisval > joy_commit_range)
-                {
-                analog1 |= ANALOG_RIGHT;
-                }
-                else if (axisval < -joy_commit_range)
-                {
-                analog1 |= ANALOG_LEFT;
-                }
-                break;
-                case 1: /* Y axis*/
-                axisval = event.jaxis.value;
-                analog1 &= ~(ANALOG_UP | ANALOG_DOWN);
-                if (axisval > joy_commit_range)
-                {
-                analog1 |= ANALOG_DOWN;
-                }
-                else if (axisval < -joy_commit_range)
-                {
-                analog1 |= ANALOG_UP;
-                }
-                break;
-            }
-            break;
-            case SDL_JOYBUTTONDOWN:
-            break;
-            default:
-            break;
+        case SDLK_v:
+        {
+          Config.ShowFps=!Config.ShowFps;
         }
+        break;
+        default:
+        break;
+      }
+    break;
+    case SDL_JOYAXISMOTION:
+      switch (event.jaxis.axis)
+      {
+        case 0: /* X axis */
+          axisval = event.jaxis.value;
+          if(Config.AnalogArrow) {
+            analog1 &= ~(ANALOG_LEFT | ANALOG_RIGHT);
+            if (axisval > joy_commit_range)
+            {
+              analog1 |= ANALOG_RIGHT;
+            }
+            else if (axisval < -joy_commit_range)
+            {
+              analog1 |= ANALOG_LEFT;
+            }
+          } else {
+            tmp_axis = (axisval + 32768) / 64;
+            if (event.jaxis.which == 0) {
+              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 32;
+            } else {
+              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 48;
+            }
+          }
+        break;
+        case 1: /* Y axis*/
+        axisval = event.jaxis.value;
+          if(Config.AnalogArrow) {
+            analog1 &= ~(ANALOG_UP | ANALOG_DOWN);
+            if (axisval > joy_commit_range)
+            {
+            analog1 |= ANALOG_DOWN;
+            }
+            else if (axisval < -joy_commit_range)
+            {
+            analog1 |= ANALOG_UP;
+            }
+          } else {
+            tmp_axis = (axisval + 32768) / 64;
+            if (event.jaxis.which == 0) {
+              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 40;
+            } else {
+              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 56;
+            }
+          }
+        break;
+      }
+      break;
+      case SDL_JOYBUTTONDOWN:
+        if(event.jbutton.which == 0) {
+          buttons |= (1 << DKEY_L3);
+        } else if(event.jbutton.which == 1) {
+          buttons |= (1 << DKEY_R3);
+        }
+        break;
+      default:
+        break;
     }
-
+  }
 	int k = 0;
 	while (keymap[k].key)
 	{
@@ -661,7 +687,7 @@ void pad_update(void)
 		}
 		k++;
 	}
-	pad1 = _pad1;
+	buttons = _pad1;
 
 	/* Special key combos for GCW-Zero */
 #ifdef GCW_ZERO
@@ -669,7 +695,7 @@ void pad_update(void)
 	{
 		/* We need to make sure to cancel out Select and L1/R2 being pressed when user presses L2/R2 hotkeys */	
 		// L2
-		if (keys[SDLK_TAB])
+		/*if (keys[SDLK_TAB])
 		{
 			pad1 |= (1 << DKEY_SELECT);
 			pad1 |= (1 << DKEY_L1);
@@ -690,7 +716,7 @@ void pad_update(void)
 		else
 		{
 			pad1 |= (1 << DKEY_R2);
-		}
+		}*/
 	  
 		if (!keys[SDLK_RETURN])
 		{
@@ -729,41 +755,33 @@ void pad_update(void)
 	//
 	if (Config.AnalogArrow)
 	{
-		pad1 |= (1 << DKEY_SELECT);
+		buttons |= (1 << DKEY_SELECT);
 		// SELECT+B for psx's SELECT
 		if (keys[SDLK_ESCAPE] && keys[SDLK_LALT])
 		{
-			pad1 &= ~(1 << DKEY_SELECT);
-			pad1 |= (1 << DKEY_CROSS);
+			buttons &= ~(1 << DKEY_SELECT);
+			buttons |= (1 << DKEY_CROSS);
 		}
 
 		if ((_pad1 & (1 << DKEY_UP)) && (analog1 & ANALOG_UP))
 		{
-			pad1 &= ~(1 << DKEY_UP);
+			buttons &= ~(1 << DKEY_UP);
 		}
 		if ((_pad1 & (1 << DKEY_DOWN)) && (analog1 & ANALOG_DOWN))
 		{
-			pad1 &= ~(1 << DKEY_DOWN);
+			buttons &= ~(1 << DKEY_DOWN);
 		}
 		if ((_pad1 & (1 << DKEY_LEFT)) && (analog1 & ANALOG_LEFT))
 		{
-			pad1 &= ~(1 << DKEY_LEFT);
+			buttons &= ~(1 << DKEY_LEFT);
 		}
 		if ((_pad1 & (1 << DKEY_RIGHT)) && (analog1 & ANALOG_RIGHT))
 		{
-			pad1 &= ~(1 << DKEY_RIGHT);
+			buttons &= ~(1 << DKEY_RIGHT);
 		}
 	}
-	else
-	{
-		// Analog Arrow Off
-		if (analog1 == ANALOG_DOWN)
-		{
-			menu_check = 2;
-		}
-	}
-
-
+  
+  	pad1 &= (0xffffffffffffffff & buttons) >> 16;
 	// SELECT+START for menu
 	if (menu_check == 2 && !keys[SDLK_LALT])
 	{
@@ -779,7 +797,7 @@ void pad_update(void)
 		use_speedup = 0;
 		menu_check = 0;
 		analog1 = 0;
-		pad1 |= (1 << DKEY_START) | (1 << DKEY_CROSS) | (1 << DKEY_SELECT);
+		buttons |= (1 << DKEY_START) | (1 << DKEY_CROSS) | (1 << DKEY_SELECT);
 		video_clear();
 		video_flip();
 		video_clear();
@@ -792,7 +810,7 @@ void pad_update(void)
 #endif
 }
 
-unsigned short pad_read(int num)
+uint64_t pad_read(int num)
 {
 	return (num == 0 ? pad1 : pad2);
 }
@@ -1425,7 +1443,7 @@ int main (int argc, char **argv)
     }
   }
 
-  CheckforCDROMid_applyhacks();
+  //CheckforCDROMid_applyhacks();
   
   joy_init();
 
