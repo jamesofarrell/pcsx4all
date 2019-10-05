@@ -633,7 +633,7 @@ void pad_update(void)
             }
           } else {
             tmp_axis = (axisval + 32768) / 64;
-            if (event.jaxis.which == 0) {
+            if (event.jaxis.which == 1) {
               pad1 &= (0xffffffffffffffff & tmp_axis ) >> 32;
             } else {
               pad1 &= (0xffffffffffffffff & tmp_axis ) >> 48;
@@ -654,7 +654,7 @@ void pad_update(void)
             }
           } else {
             tmp_axis = (axisval + 32768) / 64;
-            if (event.jaxis.which == 0) {
+            if (event.jaxis.which == 1) {
               pad1 &= (0xffffffffffffffff & tmp_axis ) >> 40;
             } else {
               pad1 &= (0xffffffffffffffff & tmp_axis ) >> 56;
