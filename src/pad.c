@@ -49,14 +49,10 @@ unsigned char PAD1_poll(void) {
 
 		n = pad_read(0);
 		
-		buf[0] = n;
-		buf[1] = n >> 8;
-		buf[2] = n >> 16;
-		buf[3] = n >> 24;
-		buf[4] = n >> 32;
-		buf[5] = n >> 40;
-		buf[6] = n >> 48;
-		buf[7] = n >> 52 ;
+		for (int i = 7; i >= 0; i--)
+		{
+		    buf[i] = n & (0xFF << (i * 8));
+		}
 
 		g.CmdLen1 = 4;
 
@@ -76,14 +72,10 @@ unsigned char PAD2_poll(void) {
 
 		n = pad_read(1);
 
-		buf[0] = n & 0xFFFFFFFFFFFFFF;
-		buf[1] = n >> 8 & 0xFFFFFFFFFFFF;
-		buf[2] = n >> 16 & 0xFFFFFFFFFF;
-		buf[3] = n >> 24 & 0xFFFFFFFF;
-		buf[4] = n >> 32 & 0xFFFFFF;
-		buf[5] = n >> 40 & 0xFFFF;
-		buf[6] = n >> 48 & 0xFF;
-		buf[7] = n >> 52 ;
+		for (int i = 7; i >= 0; i--)
+		{
+		    buf[i] = n & (0xFF << (i * 8));
+		}
 
 		g.CmdLen2 = 4;
 

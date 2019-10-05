@@ -534,7 +534,7 @@ static struct
   { 0, 0 }
 };
 
-static uint64_t pad1 = 0x5a73ffffffffffff;
+static uint64_t pad1 = 0xFF5affffffffffff;
 static uint64_t pad2 = 0xFF5AFFFF80808080;
 static unsigned short buttons = 0xffff, _pad1 = 0xffff;
 static unsigned short analog1 = 0,tmp_axis=0;
@@ -634,9 +634,9 @@ void pad_update(void)
           } else {
             tmp_axis = (axisval + 32768) / 64;
             if (event.jaxis.which == 1) {
-              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 32;
+              pad1 = (pad1 & (0xffffffffffffff00)) | (tmp_axis << 0);
             } else {
-              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 48;
+              pad1 = (pad1 & (0xffffffffffff00ff)) | (tmp_axis << 8);
             }
           }
         break;
@@ -653,11 +653,11 @@ void pad_update(void)
             analog1 |= ANALOG_UP;
             }
           } else {
-            tmp_axis = (axisval + 32768) / 64;
+            tmp_axis = (axisval + 32768) / 1024;
             if (event.jaxis.which == 1) {
-              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 40;
+              pad1 = (pad1 & (0xffffffffff00ffff)) | (tmp_axis << 16);
             } else {
-              pad1 &= (0xffffffffffffffff & tmp_axis ) >> 56;
+              pad1 = (pad1 & (0xffffffff00ffffff)) | (tmp_axis << 24);
             }
           }
         break;
@@ -781,7 +781,7 @@ void pad_update(void)
 		}
 	}
   
-  	pad1 &= (0xffffffffffffffff & buttons) >> 16;
+    pad1 = (pad1 & (0xffff0000ffffffff)) | (((uint64_t)(buttons)) << 32);
 	// SELECT+START for menu
 	if (menu_check == 2 && !keys[SDLK_LALT])
 	{
