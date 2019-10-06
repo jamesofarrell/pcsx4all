@@ -526,8 +526,8 @@ static struct
   { SDLK_LALT,		DKEY_CROSS },
   { SDLK_TAB,		DKEY_L1 },
   { SDLK_BACKSPACE,	DKEY_R1 },
-  { SDLK_END,		DKEY_L2 },
-  { SDLK_3,			DKEY_R2 },
+  { SDLK_PAGEUP,		DKEY_L2 },
+  { SDLK_PAGEDOWN,			DKEY_R2 },
   { SDLK_ESCAPE,		DKEY_SELECT },
 
   { SDLK_RETURN,		DKEY_START },
@@ -541,7 +541,7 @@ static uint16_t  buttons = 0xFFFF;
 static int menu_check = 0;
 static int select_count = 0;
 uint8_t use_speedup = 0;
-static uint16_t id=0x5A53,joy_l = 0x8080,joy_r = 0x8080;
+static uint16_t id=0x5A41,joy_l = 0x8080,joy_r = 0x8080;
 SDL_Joystick * sdl_joy1;
 SDL_Joystick * sdl_joy2;
 #define joy_commit_range    3276
