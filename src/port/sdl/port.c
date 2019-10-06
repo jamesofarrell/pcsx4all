@@ -541,7 +541,7 @@ static uint16_t  buttons = 0xFFFF;
 static int menu_check = 0;
 static int select_count = 0;
 uint8_t use_speedup = 0;
-static uint16_t id=0x5A73,joy_l = 0x8080,joy_r = 0x8080;
+static uint16_t id=0x5A53,joy_l = 0x8080,joy_r = 0x8080;
 SDL_Joystick * sdl_joy1;
 SDL_Joystick * sdl_joy2;
 #define joy_commit_range    3276
@@ -637,9 +637,9 @@ void pad_update(void)
           } else {
             tmp_axis = (axisval + 32768) / 256;
             if (event.jaxis.which == 1) {
-              joy_r = (joy_r & 0x00FF) | (tmp_axis << 8);
+              joy_r = (joy_r & 0xFF00) | tmp_axis;
             } else {
-              joy_l = (joy_l & 0x00FF) | (tmp_axis << 8);
+              joy_l = (joy_l & 0xFF00) | tmp_axis;
             }
           }
         break;
@@ -658,9 +658,9 @@ void pad_update(void)
           } else {
             tmp_axis = (axisval + 32768) / 256;
             if (event.jaxis.which == 1) {
-              joy_r = (joy_r & 0xFF00) | tmp_axis;
+              joy_r = (joy_r & 0x00FF) | (tmp_axis << 8);
             } else {
-              joy_l = (joy_l & 0xFF00) | tmp_axis;
+              joy_l = (joy_l & 0x00FF) | (tmp_axis << 8);
             }
           }
         break;

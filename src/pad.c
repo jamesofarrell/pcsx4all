@@ -55,9 +55,9 @@ unsigned char PAD1_poll(void) {
 
 		//printf("buf 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x  \n",buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
 
-		g.CmdLen1 = 4;
+		g.CmdLen1 = 8;
 
-		return 0x41;
+		return buf[0];
 	}
 
 	if (g.CurByte1 >= g.CmdLen1) return 0xFF;
