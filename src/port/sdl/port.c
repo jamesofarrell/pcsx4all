@@ -534,13 +534,14 @@ static struct
   { 0, 0 }
 };
 
-static uint64_t pad1 = 0xFF5affffffffffff;
-static uint64_t pad2 = 0xFF5AFFFF80808080;
-static unsigned short buttons = 0xffff, _pad1 = 0xffff;
+static uint64_t pad1 = 0xFF5Affffffffffff;
+static uint64_t pad2 = 0x5AFFFFFF80808080;
 static unsigned short analog1 = 0,tmp_axis=0;
+static uint16_t  buttons = 0xFFFF;
 static int menu_check = 0;
 static int select_count = 0;
 uint8_t use_speedup = 0;
+static uint16_t id=0x5A73,joy_l = 0x8080,joy_r = 0x8080;
 SDL_Joystick * sdl_joy1;
 SDL_Joystick * sdl_joy2;
 #define joy_commit_range    3276
@@ -556,6 +557,7 @@ void joy_init(void)
 {
   sdl_joy1 = SDL_JoystickOpen(0);
   sdl_joy2 = SDL_JoystickOpen(1);
+  SDL_InitSubSystem(SDL_INIT_JOYSTICK);
   SDL_JoystickEventState(SDL_ENABLE);
 
   /*
@@ -587,8 +589,8 @@ void joy_init(void)
 
 void pad_update(void)
 {
-    int axisval;
-	SDL_Event event;
+  int axisval;
+  SDL_Event event;
 	Uint8 *keys = SDL_GetKeyState(NULL);
 
 	while (SDL_PollEvent(&event))
@@ -616,12 +618,13 @@ void pad_update(void)
         break;
       }
     break;
+
     case SDL_JOYAXISMOTION:
       switch (event.jaxis.axis)
       {
         case 0: /* X axis */
           axisval = event.jaxis.value;
-          if(Config.AnalogArrow) {
+          if(Config.AnalogArrow == 1) {
             analog1 &= ~(ANALOG_LEFT | ANALOG_RIGHT);
             if (axisval > joy_commit_range)
             {
@@ -632,17 +635,17 @@ void pad_update(void)
               analog1 |= ANALOG_LEFT;
             }
           } else {
-            tmp_axis = (axisval + 32768) / 64;
+            tmp_axis = (axisval + 32768) / 256;
             if (event.jaxis.which == 1) {
-              pad1 = (pad1 & (0xffffffffffffff00)) | (tmp_axis << 0);
+              joy_r = (joy_r & 0x00FF) | (tmp_axis << 8);
             } else {
-              pad1 = (pad1 & (0xffffffffffff00ff)) | (tmp_axis << 8);
+              joy_l = (joy_l & 0x00FF) | (tmp_axis << 8);
             }
           }
         break;
         case 1: /* Y axis*/
         axisval = event.jaxis.value;
-          if(Config.AnalogArrow) {
+          if(Config.AnalogArrow == 1) {
             analog1 &= ~(ANALOG_UP | ANALOG_DOWN);
             if (axisval > joy_commit_range)
             {
@@ -653,11 +656,11 @@ void pad_update(void)
             analog1 |= ANALOG_UP;
             }
           } else {
-            tmp_axis = (axisval + 32768) / 1024;
+            tmp_axis = (axisval + 32768) / 256;
             if (event.jaxis.which == 1) {
-              pad1 = (pad1 & (0xffffffffff00ffff)) | (tmp_axis << 16);
+              joy_r = (joy_r & 0xFF00) | tmp_axis;
             } else {
-              pad1 = (pad1 & (0xffffffff00ffffff)) | (tmp_axis << 24);
+              joy_l = (joy_l & 0xFF00) | tmp_axis;
             }
           }
         break;
@@ -674,20 +677,20 @@ void pad_update(void)
         break;
     }
   }
+
 	int k = 0;
 	while (keymap[k].key)
 	{
 		if (keys[keymap[k].key])
 		{
-			_pad1 &= ~(1 << keymap[k].bit);
+			buttons &= ~(1 << keymap[k].bit);
 		}
 		else
 		{
-			_pad1 |= (1 << keymap[k].bit);
+			buttons |= (1 << keymap[k].bit);
 		}
 		k++;
 	}
-	buttons = _pad1;
 
 	/* Special key combos for GCW-Zero */
 #ifdef GCW_ZERO
@@ -753,7 +756,7 @@ void pad_update(void)
 	}
   
 	//
-	if (Config.AnalogArrow)
+	if (Config.AnalogArrow == 1)
 	{
 		buttons |= (1 << DKEY_SELECT);
 		// SELECT+B for psx's SELECT
@@ -763,25 +766,25 @@ void pad_update(void)
 			buttons |= (1 << DKEY_CROSS);
 		}
 
-		if ((_pad1 & (1 << DKEY_UP)) && (analog1 & ANALOG_UP))
+		if ((buttons & (1 << DKEY_UP)) && (analog1 & ANALOG_UP))
 		{
 			buttons &= ~(1 << DKEY_UP);
 		}
-		if ((_pad1 & (1 << DKEY_DOWN)) && (analog1 & ANALOG_DOWN))
+		if ((buttons & (1 << DKEY_DOWN)) && (analog1 & ANALOG_DOWN))
 		{
 			buttons &= ~(1 << DKEY_DOWN);
 		}
-		if ((_pad1 & (1 << DKEY_LEFT)) && (analog1 & ANALOG_LEFT))
+		if ((buttons & (1 << DKEY_LEFT)) && (analog1 & ANALOG_LEFT))
 		{
 			buttons &= ~(1 << DKEY_LEFT);
 		}
-		if ((_pad1 & (1 << DKEY_RIGHT)) && (analog1 & ANALOG_RIGHT))
+		if ((buttons & (1 << DKEY_RIGHT)) && (analog1 & ANALOG_RIGHT))
 		{
 			buttons &= ~(1 << DKEY_RIGHT);
 		}
 	}
   
-    pad1 = (pad1 & (0xffff0000ffffffff)) | (((uint64_t)(buttons)) << 32);
+  
 	// SELECT+START for menu
 	if (menu_check == 2 && !keys[SDLK_LALT])
 	{
@@ -808,6 +811,9 @@ void pad_update(void)
 		pl_resume();    // Tell plugin_lib we're reentering emu
 	}
 #endif
+  //printf("id: 0x%x buttons: 0x%x, joy_r: 0x%x joy_l: 0x%x\n",id,buttons,joy_r,joy_l);
+  pad1 = (uint64_t)id<<48 | (uint64_t)buttons<<32 | (uint32_t) joy_r <<16 | joy_l;
+  //printf("pad1: 0x%llx\n",pad1);
 }
 
 uint64_t pad_read(int num)
