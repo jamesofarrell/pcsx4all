@@ -635,12 +635,10 @@ void pad_update(void)
               analog1 |= ANALOG_LEFT;
             }
           } else {
+            printf("jx 0x%x ",joy_l);
             tmp_axis = (axisval + 32768) / 256;
-            if (event.jaxis.which == 1) {
-              joy_r = (joy_r & 0xFF00) | tmp_axis;
-            } else {
-              joy_l = (joy_l & 0xFF00) | tmp_axis;
-            }
+            joy_l = (joy_l & 0xFF00) | tmp_axis;
+            printf("jx 0x%x tx 0x%x\n",joy_l,tmp_axis);
           }
         break;
         case 1: /* Y axis*/
@@ -656,13 +654,21 @@ void pad_update(void)
             analog1 |= ANALOG_UP;
             }
           } else {
+            printf("jy 0x%x ",joy_l);
             tmp_axis = (axisval + 32768) / 256;
-            if (event.jaxis.which == 1) {
-              joy_r = (joy_r & 0x00FF) | (tmp_axis << 8);
-            } else {
-              joy_l = (joy_l & 0x00FF) | (tmp_axis << 8);
-            }
+            joy_l = (joy_l & 0x00FF) | (tmp_axis << 8);
+            printf("jy 0x%x ty 0x%x\n",joy_l,tmp_axis);
           }
+        break;
+        case 2: /* X axis*/
+          axisval = event.jaxis.value;
+          tmp_axis = (axisval + 32768) / 256;
+          joy_r = (joy_r & 0xFF00) | tmp_axis;
+        break;
+        case 3: /* X axis*/
+          axisval = event.jaxis.value;
+          tmp_axis = (axisval + 32768) / 256;
+          joy_r = (joy_r & 0x00FF) | (tmp_axis << 8);
         break;
       }
       break;
@@ -811,9 +817,9 @@ void pad_update(void)
 		pl_resume();    // Tell plugin_lib we're reentering emu
 	}
 #endif
-  //printf("id: 0x%x buttons: 0x%x, joy_r: 0x%x joy_l: 0x%x\n",id,buttons,joy_r,joy_l);
-  pad1 = (uint64_t)id<<48 | (uint64_t)buttons<<32 | (uint32_t) joy_r <<16 | joy_l;
-  //printf("pad1: 0x%llx\n",pad1);
+  printf("id: 0x%x buttons: 0x%x, joy_r: 0x%x joy_l: 0x%x\n",id,buttons,joy_r,joy_l);
+  pad1 = (uint64_t)id<<48 | (uint64_t)buttons<<32 | (uint32_t) joy_r <<16 | (joy_l );
+  printf("pad1: 0x%llx\n",pad1);
 }
 
 uint64_t pad_read(int num)

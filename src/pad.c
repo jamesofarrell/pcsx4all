@@ -54,7 +54,6 @@ unsigned char PAD1_poll(void) {
     }
 
 		//printf("buf 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x  \n",buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
-
 		g.CmdLen1 = 8;
 
 		return buf[0];
@@ -77,9 +76,9 @@ unsigned char PAD2_poll(void) {
       buf[i+1] = (n >> ((7-i) * 8)) & 0xFF;
     }
 
-		g.CmdLen2 = 4;
+		g.CmdLen2 = 8;
 
-		return 0x41;
+		return buf[0];
 	}
 
 	if (g.CurByte2 >= g.CmdLen2) return 0xFF;
